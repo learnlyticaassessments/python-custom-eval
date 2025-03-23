@@ -1,0 +1,61 @@
+name: Evaluate Pandas Assignment For Candidates
+
+on:
+  workflow_dispatch: {}
+  
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Evaluator Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+    
+    - name: Set up SSH key
+      run: |
+        set -eux  # Optional: Enable verbose + exit on error
+    
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY_PEM }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "StrictHostKeyChecking no" > ~/.ssh/config
+    
+        echo "Scanning IPs from input.csv and populating known_hosts"
+        tail -n +2 input.csv | cut -d',' -f2 | sort | uniq | while read ip; do
+          echo "Scanning $ip"
+          ssh-keyscan -H "$ip" >> ~/.ssh/known_hosts || echo "Warning: could not scan $ip"
+        done
+
+    - name: Run Evaluation
+      run: python evaluator.py
+      
+    - name: Fix pandas/numpy compatibility
+      run: |
+        pip uninstall -y pandas numpy
+        pip install --no-cache-dir numpy pandas openpyxl
+
+    - name: Generate Excel Report
+      run: |
+        pip install pandas openpyxl
+        python create_excel_report.py
+      # Optional, if you have create_excel_report.py
+
+    - name: Upload Excel Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: evaluation-excel-report
+        path: evaluation_report.xlsx
+
+    - name: Upload Evaluation Results JSON
+      uses: actions/upload-artifact@v4
+      with:
+        name: evaluation-results-json
+        path: results/
