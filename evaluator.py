@@ -10,7 +10,7 @@ import traceback
 
 # === CONFIGURATION ===
 INPUT_CSV = "input.csv"
-REMOTE_PATH = "/home/ubuntu/opt/.kafka_envs/kafka_13ui/kafka-feb25-org-akhil-89/"
+REMOTE_PATH = "/home/ubuntu/opt/.python_envs/python_31rd/python-march25-org-john-01"
 ASSIGNMENT_SUBDIR = "assignments"
 SSH_USER = "ubuntu"
 PEM_PATH = os.getenv("PEM_PATH", os.path.expanduser("~/.ssh/id_rsa"))
